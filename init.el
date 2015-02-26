@@ -218,9 +218,11 @@ argument, use `recentf-open-files' instead."
 ;;; Purpose
 (add-to-list 'load-path "~/emacs-purpose/")
 (require 'purpose)
+(setq purpose-default-layout-file (concat user-emacs-directory "/purpose-layouts/"))
 (setq split-width-threshold 120)
 (setq split-height-threshold 40)
 (purpose-mode)
+
 (add-to-list 'load-path "~/emacs-purpose/extensions/")
 (require 'pu-ext-dired-ibuffer)
 

@@ -1,0 +1,19 @@
+# ignore temporary files
+*~
+
+# ignore byte-compiled files
+*elc
+*pyc
+
+# ignore elpa readme files
+elpa/*-readme.txt
+
+# ignore elpa archives
+elpa/archives/*
+
+# ignore various auto-generated files
+ac-comphist.dat
+projectile-bookmarks.eld
+semanticdb/*
+smex-items
+url/*
