@@ -10,13 +10,14 @@
 
 ;; provide `with-eval-after-load' for old Emacsen that don't have it
 (unless (fboundp 'with-eval-after-load)
-  ;; this macro was taken from Emacs' source code
+  ;; this macro was taken from Emacs' source code, with some alteration
+  ;; to work with Emacs 24.3 (and older?)
   (defmacro with-eval-after-load (file &rest body)
     "Execute BODY after FILE is loaded.
 FILE is normally a feature name, but it can also be a file name,
 in case that file does not provide any feature."
-    (declare (indent 1) (debug t))
-    `(eval-after-load ,file (lambda () ,@body))))
+    ;; (declare (indent 1) (debug t))
+    `(eval-after-load ,file '(progn ,@body))))
 
 (defmacro eval-if-require (feature &rest body)
   "Try to `require' FEATURE, execute BODY if successful."
@@ -126,8 +127,9 @@ argument, use `recentf-open-files' instead."
 (global-set-key (kbd "C-;") #'iedit-mode)
 
 ;; ace-jump
+(autoload 'ace-jump-mode-enable-mark-sync "ace-jump-mode")
 (with-eval-after-load 'ace-jump-mode
-  (ace-jump-mode-enable-mark-sync))
+    (ace-jump-mode-enable-mark-sync))
 (global-set-key (kbd "C-c SPC") #'ace-jump-mode)
 (global-set-key (kbd "C-x SPC") #'ace-jump-mode-pop-mark)
 
@@ -152,19 +154,20 @@ argument, use `recentf-open-files' instead."
   )
 
 ;; powerline
-(require 'powerline)
-(set-face-attribute 'mode-line nil
-		    :background "sky blue"
-		    :foreground "black"
-		    :box nil)
-(set-face-attribute 'powerline-active1 nil
-		    :background "grey22"
-		    :foreground "sky blue")
-(set-face-attribute 'powerline-active2 nil
-		    :background "grey40"
-		    :foreground "grey90")
-(powerline-default-theme)
-(powerline-reset)
+(eval-if-require
+ 'powerline
+ (set-face-attribute 'mode-line nil
+		     :background "sky blue"
+		     :foreground "black"
+		     :box nil)
+ (set-face-attribute 'powerline-active1 nil
+		     :background "grey22"
+		     :foreground "sky blue")
+ (set-face-attribute 'powerline-active2 nil
+		     :background "grey40"
+		     :foreground "grey90")
+ (powerline-default-theme)
+ (powerline-reset))
 
 ;; hydra
 (defhydra hydra-zoom (global-map "<f2>")
@@ -204,11 +207,14 @@ argument, use `recentf-open-files' instead."
   (define-key paredit-mode-map (kbd ")") #'paredit-close-square))
 
 ;; C
-(add-hook 'c-mode-hook #'(lambda () (semantic-mode 1)))
-(add-hook 'c-mode-hook #'(lambda () (semantic-idle-summary-mode 1)))
 (with-eval-after-load 'cc-mode
+  (require 'semantic)
   (define-key c-mode-map (kbd "M-<return>") #'semantic-ia-fast-jump)
   (define-key c-mode-map (kbd "C-c C-j") #'idomenu))
+(add-hook 'c-mode-hook
+	  #'(lambda ()
+	      (semantic-mode 1)
+	      (semantic-idle-summary-mode 1)))
 
 ;; Common Lisp
 (setq inferior-lisp-program "sbcl")
@@ -217,13 +223,14 @@ argument, use `recentf-open-files' instead."
 
 ;;; Purpose
 (add-to-list 'load-path "~/emacs-purpose/")
-(require 'purpose)
-(setq purpose-default-layout-file (concat user-emacs-directory "/purpose-layouts/"))
-(setq split-width-threshold 120)
-(setq split-height-threshold 40)
-(purpose-mode)
+(eval-if-require
+ 'purpose
+ (setq purpose-default-layout-file (concat user-emacs-directory "/purpose-layouts/"))
+ (setq split-width-threshold 120)
+ (setq split-height-threshold 40)
+ (purpose-mode)
 
-(add-to-list 'load-path "~/emacs-purpose/extensions/")
-(require 'pu-ext-dired-ibuffer)
+ (add-to-list 'load-path "~/emacs-purpose/extensions/")
+ (require 'pu-ext-dired-ibuffer))
 
 
