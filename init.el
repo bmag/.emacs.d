@@ -1,3 +1,5 @@
+(setq inhibit-startup-screen t)
+
 (require 'package)
 (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
                          ("melpa" . "http://melpa.org/packages/")
@@ -89,6 +91,15 @@ argument, use `recentf-open-files' instead."
 (global-set-key (kbd "C-<f9>") #'find-grep)
 (setq-default require-final-newline t)
 
+;; taken from `elpy-open-and-indent-line-below'
+(defun my:newline-and-indent-below ()
+  "Open a line below the current one, move there, and indent."
+  (interactive)
+  (move-end-of-line 1)
+  (newline-and-indent))
+(global-set-key (kbd "C-o") #'my:newline-and-indent-below)
+
+
 ;; electric
 (electric-pair-mode 1)
 (electric-indent-mode 1)
@@ -119,6 +130,9 @@ argument, use `recentf-open-files' instead."
 ;; company
 (global-company-mode 1)
 (setq-default company-idle-delay 0)
+
+;; company-quickhelp
+(company-quickhelp-mode 1)
 
 ;; yasnippet
 (yas-global-mode 1)
@@ -230,7 +244,19 @@ argument, use `recentf-open-files' instead."
  (setq split-height-threshold 40)
  (purpose-mode)
 
- (add-to-list 'load-path "~/emacs-purpose/extensions/")
- (require 'pu-ext-dired-ibuffer))
+ (require 'purpose-x)
+ (global-set-key (kbd "C-x 1")
+		 (define-purpose-prefix-overload my:delete-windows
+		   '(delete-other-windows purpose-delete-non-dedicated-windows)))
+ (global-set-key (kbd "C-c b") #'purpose-switch-buffer-with-purpose)
+ (global-set-key (kbd "C-c 1") #'purpose-delete-non-dedicated-windows))
 
 
+;;; Prefix overload
+(add-to-list 'load-path "~/Documents/emacs/prefix-overload")
+(eval-if-require
+ 'prefix-overload
+ (define-prefix-overload my-ace-window
+   '(ace-select-window
+     ace-swap-window
+     ace-delete-window)))
