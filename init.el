@@ -6,6 +6,38 @@
                          ("marmalade" . "http://marmalade-repo.org/packages/")))
 
 (package-initialize)
+;; (unless (package-installed-p 'use-package)
+;;   (package-refresh-contents)
+;;   (package-install 'use-package))
+;; (require 'use-package)
+
+;; used packages:
+;; ace-jump-mode
+;; comapny
+;; company-quickhelp
+;; elpy
+;; flycheck
+;; hydra
+;; idomenu
+;; ido-vertical
+;; iedit
+;; imenu-list
+;; paredit
+;; powerline
+;; purpose
+;; smex
+;; yasnippet
+
+;; installed but unconfigured packages:
+;; ace-window
+;; diminish
+;; flx
+;; flx-ido
+;; golden-ratio
+;; magit
+;; projectile
+;; python-pep8
+;; use-package
 
 (add-to-list 'load-path (format "%s%s" user-emacs-directory "lisp/"))
 
@@ -115,7 +147,7 @@ argument, use `recentf-open-files' instead."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "black" :foreground "white" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 113 :width normal :foundry "unknown" :family "DejaVu Sans Mono"))))
+ '(default ((t (:inherit nil :stipple nil :background "black" :foreground "white" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 132 :width normal :foundry "unknown" :family "Inconsolata"))))
  '(cursor ((t (:background "dark red"))))
  '(font-lock-comment-face ((t (:foreground "green"))))
  '(font-lock-function-name-face ((t (:foreground "yellow"))))
@@ -127,45 +159,63 @@ argument, use `recentf-open-files' instead."
 
 ;;; --- UI plugins ---
 
-;; company
-(global-company-mode 1)
-(setq-default company-idle-delay 0)
+;; diminish
+;; (eval-if-require
+;;  'diminish
+;;  (diminish 'eldoc-mode)
+;;  (diminish 'company-mode)
+;;  (diminish 'yas-minor-mode))
 
-;; company-quickhelp
-(company-quickhelp-mode 1)
+;; company, company-quickhelp
+(eval-if-require
+ 'company
+ (global-company-mode 1))
 
-;; yasnippet
-(yas-global-mode 1)
+(with-eval-after-load 'company
+  (setq-default company-idle-delay 0)
+  (eval-if-require
+   'company-quickhelp
+   (company-quickhelp-mode 1)))
+
+;; YASnippet
+(eval-if-require
+ 'yasnippet
+ (yas-global-mode 1))
 
 ;; iedit
 (global-set-key (kbd "C-;") #'iedit-mode)
 
+;; ido-vertical-mode
+(eval-if-require
+ 'ido-vertical-mode
+ (ido-vertical-mode 1))
+
+
 ;; ace-jump
 (autoload 'ace-jump-mode-enable-mark-sync "ace-jump-mode")
 (with-eval-after-load 'ace-jump-mode
-    (ace-jump-mode-enable-mark-sync))
+  (ace-jump-mode-enable-mark-sync))
 (global-set-key (kbd "C-c SPC") #'ace-jump-mode)
-(global-set-key (kbd "C-x SPC") #'ace-jump-mode-pop-mark)
+(global-set-key (kbd "C-c C-SPC") #'ace-jump-mode-pop-mark)
 
 ;; smex
-(global-set-key (kbd "M-x") #'smex)			; all commands
-(global-set-key (kbd "M-X") #'smex-major-mode-commands) ; only major mode's commands
-(global-set-key (kbd "C-c M-x") #'execute-extended-command) ; old M-x
+(global-set-key (kbd "M-x") #'smex)
+(global-set-key (kbd "M-X") #'smex-major-mode-commands)
+(global-set-key (kbd "C-c M-x") #'execute-extended-command)
 
+;; (with-eval-after-load 'flx-ido
+;;   (defun toggle-flx-ido-advice (function &rest args)
+;;     "Call FUNCTION with ARGS and `flx-ido-mode' toggled."
+;;     (unwind-protect
+;; 	(progn (flx-ido-mode (if flx-ido-mode -1 1))
+;; 	       (apply function args))
+;;       (flx-ido-mode (if flx-ido-mode -1 1))))
 
-(with-eval-after-load 'flx-ido
-  (defun toggle-flx-ido-advice (function &rest args)
-    "Call FUNCTION with ARGS and `flx-ido-mode' toggled."
-    (unwind-protect
-	(progn (flx-ido-mode (if flx-ido-mode -1 1))
-	       (apply function args))
-      (flx-ido-mode (if flx-ido-mode -1 1))))
-
-  ;; (with-eval-after-load 'smex
-  ;;   (when (fboundp 'advice-add)
-  ;;     (advice-add 'smex :around #'toggle-flx-ido-advice)
-  ;;     (advice-add 'smex-major-mode-commands :around #'toggle-flx-ido-advice)))
-  )
+;;   ;; (with-eval-after-load 'smex
+;;   ;;   (when (fboundp 'advice-add)
+;;   ;;     (advice-add 'smex :around #'toggle-flx-ido-advice)
+;;   ;;     (advice-add 'smex-major-mode-commands :around #'toggle-flx-ido-advice)))
+;;   )
 
 ;; powerline
 (eval-if-require
@@ -184,26 +234,27 @@ argument, use `recentf-open-files' instead."
  (powerline-reset))
 
 ;; hydra
-(defhydra hydra-zoom (global-map "<f2>")
-  "zoom"
-  ("g" text-scale-increase "in")
-  ("l" text-scale-decrease "out"))
+(eval-if-require
+ 'hydra
+ (defhydra hydra-zoom (global-map "<f2>")
+   "zoom"
+   ("g" text-scale-increase "in")
+   ("l" text-scale-decrease "out"))
 
-(defhydra hydra-error (global-map "M-g")
-  "goto-error"
-  ("f" first-error "first")
-  ("n" next-error "next")
-  ("p" previous-error "prev")
-  ("v" recenter-top-bottom "recenter")
-  ("q" nil "quit"))
-
-
+ (defhydra hydra-error (global-map "M-g")
+   "goto-error"
+   ("f" first-error "first")
+   ("n" next-error "next")
+   ("p" previous-error "prev")
+   ("v" recenter-top-bottom "recenter")
+   ("q" nil "quit")))
 
 ;;; --- Programming ---
 
 ;; Python
 (require 'my-python)
 
+;; Flycheck
 (with-eval-after-load 'flycheck
   (flycheck-package-setup)
   (setq flycheck-emacs-lisp-load-path 'inherit))
@@ -211,9 +262,11 @@ argument, use `recentf-open-files' instead."
 ;; Emacs-Lisp
 (add-hook 'emacs-lisp-mode-hook #'(lambda () (eldoc-mode 1)))
 (add-hook 'emacs-lisp-mode-hook #'(lambda () (paredit-mode 1)))
-(define-key emacs-lisp-mode-map (kbd "C-c C-j") #'idomenu)
 (define-key emacs-lisp-mode-map (kbd "<f8>") #'eval-buffer)
+(define-key emacs-lisp-mode-map (kbd "C-c C-j") #'idomenu)
 
+
+;; Paredit
 (with-eval-after-load 'paredit
   (define-key paredit-mode-map (kbd "[") #'paredit-open-round)
   (define-key paredit-mode-map (kbd "]") #'paredit-close-round)
@@ -225,6 +278,7 @@ argument, use `recentf-open-files' instead."
   (require 'semantic)
   (define-key c-mode-map (kbd "M-<return>") #'semantic-ia-fast-jump)
   (define-key c-mode-map (kbd "C-c C-j") #'idomenu))
+
 (add-hook 'c-mode-hook
 	  #'(lambda ()
 	      (semantic-mode 1)
@@ -260,3 +314,6 @@ argument, use `recentf-open-files' instead."
    '(ace-select-window
      ace-swap-window
      ace-delete-window)))
+
+(put 'narrow-to-region 'disabled nil)
+
