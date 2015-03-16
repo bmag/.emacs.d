@@ -13,10 +13,13 @@
 
 ;; used packages:
 ;; ace-jump-mode
+;; cider
+;; clojure-mode
 ;; comapny
 ;; company-quickhelp
 ;; elpy
 ;; flycheck
+;; helm
 ;; hydra
 ;; idomenu
 ;; ido-vertical
@@ -25,7 +28,9 @@
 ;; paredit
 ;; powerline
 ;; purpose
+;; rainbow-delimiters
 ;; smex
+;; undo-tree
 ;; yasnippet
 
 ;; installed but unconfigured packages:
@@ -33,8 +38,10 @@
 ;; diminish
 ;; flx
 ;; flx-ido
+;; gh-md
 ;; golden-ratio
 ;; magit
+;; markdown-mode
 ;; projectile
 ;; python-pep8
 ;; use-package
@@ -61,10 +68,16 @@ in case that file does not provide any feature."
 
 ;;; --- UI ---
 
+;; another user keymap
+(global-set-key (kbd "<f9>") (define-prefix-command 'my-keymap))
+
 ;; IDO
 (ido-mode 1)
 (ido-everywhere 1)
 (setq ido-enable-flex-matching 1)
+
+;; y/n questions everywhere
+(defalias 'yes-or-no-p #'y-or-n-p)
 
 ;; ibuffer
 (global-set-key (kbd "C-x C-b") #'ibuffer-list-buffers)
@@ -78,10 +91,16 @@ argument, use `recentf-open-files' instead."
       (recentf-open-files)
     (find-file (ido-completing-read "Find recent file: " recentf-list))))
 
+(defun my-recentf ()
+  (interactive)
+  (cond (ido-mode (call-interactively #'ido-recentf-open))
+	(helm-mode (call-interactively #'helm-recentf))
+	(t (call-interactively #'recentf-open-files))))
+
 (setq recentf-max-saved-items 50)
 (setq recentf-max-menu-items 20)
 (recentf-mode 1)
-(global-set-key (kbd "C-x C-r") #'ido-recentf-open)
+(global-set-key (kbd "C-x C-r") #'my-recentf)
 
 ;; buffer switching
 (defun switch-to-other-buffer ()
@@ -116,11 +135,22 @@ argument, use `recentf-open-files' instead."
 
 (show-paren-mode 1)
 (setq show-paren-style 'expression)
+(global-hl-line-mode 1)
 
 ;; editing
 (global-set-key (kbd "C-z") #'undo)
-(global-set-key (kbd "<f9>") #'compile)
 (global-set-key (kbd "C-<f9>") #'find-grep)
+(global-set-key (kbd "M-/") #'hippie-expand)
+(setq hippie-expand-try-functions-list '(try-expand-dabbrev
+					 try-expand-dabbrev-all-buffers
+					 try-expand-dabbrev-from-kill
+					 try-complete-lisp-symbol-partially
+					 try-complete-lisp-symbol
+					 try-complete-file-name-partially
+					 try-complete-file-name
+					 try-expand-all-abbrevs
+					 try-expand-list
+					 try-expand-line))
 (setq-default require-final-newline t)
 
 ;; taken from `elpy-open-and-indent-line-below'
@@ -152,6 +182,14 @@ argument, use `recentf-open-files' instead."
  '(font-lock-comment-face ((t (:foreground "green"))))
  '(font-lock-function-name-face ((t (:foreground "yellow"))))
  '(minibuffer-prompt ((t (:foreground "green"))))
+ '(rainbow-delimiters-depth-2-face ((t (:foreground "green yellow"))))
+ '(rainbow-delimiters-depth-3-face ((t (:foreground "sandy brown"))))
+ '(rainbow-delimiters-depth-4-face ((t (:foreground "purple1"))))
+ '(rainbow-delimiters-depth-5-face ((t (:foreground "LightGoldenrod1"))))
+ '(rainbow-delimiters-depth-6-face ((t (:foreground "light sky blue"))))
+ '(rainbow-delimiters-depth-7-face ((t (:foreground "light green"))))
+ '(rainbow-delimiters-depth-8-face ((t (:foreground "goldenrod"))))
+ '(rainbow-delimiters-depth-9-face ((t (:foreground "orchid"))))
  '(region ((t (:background "blue4"))))
  '(show-paren-match ((t (:background "midnight blue")))))
 
@@ -166,6 +204,7 @@ argument, use `recentf-open-files' instead."
 ;;  (diminish 'company-mode)
 ;;  (diminish 'yas-minor-mode))
 
+
 ;; company, company-quickhelp
 (eval-if-require
  'company
@@ -175,6 +214,7 @@ argument, use `recentf-open-files' instead."
   (setq-default company-idle-delay 0)
   (eval-if-require
    'company-quickhelp
+   (setq company-quickhelp-delay 1.5)
    (company-quickhelp-mode 1)))
 
 ;; YASnippet
@@ -183,12 +223,22 @@ argument, use `recentf-open-files' instead."
  (yas-global-mode 1))
 
 ;; iedit
-(global-set-key (kbd "C-;") #'iedit-mode)
+(global-set-key (kbd "C-c ;") #'iedit-mode)
+(add-hook 'iedit-mode-hook #'(lambda () (global-hl-line-mode -1)))
+(add-hook 'iedit-mode-end-hook #'(lambda () (global-hl-line-mode 1)))
 
 ;; ido-vertical-mode
 (eval-if-require
  'ido-vertical-mode
+ ;; todo: change keys in ido-common-completion-map to work
+ ;; intuitively with ido-vertical
+ (setq ido-vertical-define-keys nil)
  (ido-vertical-mode 1))
+
+;; undo-tree
+(eval-if-require
+ 'undo-tree
+ (global-undo-tree-mode 1))
 
 
 ;; ace-jump
@@ -218,20 +268,20 @@ argument, use `recentf-open-files' instead."
 ;;   )
 
 ;; powerline
-(eval-if-require
- 'powerline
- (set-face-attribute 'mode-line nil
-		     :background "sky blue"
-		     :foreground "black"
-		     :box nil)
- (set-face-attribute 'powerline-active1 nil
-		     :background "grey22"
-		     :foreground "sky blue")
- (set-face-attribute 'powerline-active2 nil
-		     :background "grey40"
-		     :foreground "grey90")
- (powerline-default-theme)
- (powerline-reset))
+;; (eval-if-require
+;;  'powerline
+;;  (set-face-attribute 'mode-line nil
+;; 		     :background "sky blue"
+;; 		     :foreground "black"
+;; 		     :box nil)
+;;  (set-face-attribute 'powerline-active1 nil
+;; 		     :background "grey22"
+;; 		     :foreground "sky blue")
+;;  (set-face-attribute 'powerline-active2 nil
+;; 		     :background "grey40"
+;; 		     :foreground "grey90")
+;;  (powerline-default-theme)
+;;  (powerline-reset))
 
 ;; hydra
 (eval-if-require
@@ -249,7 +299,45 @@ argument, use `recentf-open-files' instead."
    ("v" recenter-top-bottom "recenter")
    ("q" nil "quit")))
 
+;; rainbow-delimiters
+(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+
+;; dired-rainbow
+(eval-if-require
+ 'dired-rainbow
+ (dired-rainbow-define code "yellow" (".*\\.el")))
+
+;; helm
+(eval-if-require
+ 'helm
+ (require 'helm-config)
+ (global-set-key (kbd "C-c h") 'helm-command-prefix)
+ (global-unset-key (kbd "C-x c"))
+ (global-set-key (kbd "M-x")
+		 #'(lambda () (interactive)
+		     (call-interactively
+		      (cond (helm-mode #'helm-M-x)
+			    ((fboundp 'smex) #'smex)
+			    (t #'execute-extended-command)))))
+ (define-key helm-map (kbd "TAB") #'helm-execute-persistent-action)
+ (define-key helm-map (kbd "C-z") #'helm-select-action)
+ (setq helm-ff-file-name-history-use-recentf t
+       ;; helm-split-window-in-side-p t
+       helm-move-to-line-cycle-in-source t
+       helm-ff-search-library-in-sexp t
+       helm-scroll-amount 8)
+ (helm-mode 1))
+
+;; helm-company
+(with-eval-after-load
+ 'company
+ (define-key company-mode-map (kbd "C-;") #'helm-company)
+ (define-key company-active-map (kbd "C-;") #'helm-company))
+
 ;;; --- Programming ---
+
+;; Projectile
+(projectile-global-mode 1)
 
 ;; Python
 (require 'my-python)
@@ -260,11 +348,16 @@ argument, use `recentf-open-files' instead."
   (setq flycheck-emacs-lisp-load-path 'inherit))
 
 ;; Emacs-Lisp
-(add-hook 'emacs-lisp-mode-hook #'(lambda () (eldoc-mode 1)))
-(add-hook 'emacs-lisp-mode-hook #'(lambda () (paredit-mode 1)))
+(add-hook 'emacs-lisp-mode-hook #'turn-on-eldoc-mode)
+(add-hook 'emacs-lisp-mode-hook #'enable-paredit-mode)
 (define-key emacs-lisp-mode-map (kbd "<f8>") #'eval-buffer)
 (define-key emacs-lisp-mode-map (kbd "C-c C-j") #'idomenu)
 
+;; Clojure
+(add-hook 'clojure-mode-hook #'enable-paredit-mode)
+(add-hook 'cider-repl-mode-hook #'enable-paredit-mode)
+;; (with-eval-after-load 'clojure-mode
+;;   )
 
 ;; Paredit
 (with-eval-after-load 'paredit
@@ -293,27 +386,24 @@ argument, use `recentf-open-files' instead."
 (add-to-list 'load-path "~/emacs-purpose/")
 (eval-if-require
  'purpose
- (setq purpose-default-layout-file (concat user-emacs-directory "/purpose-layouts/"))
- (setq split-width-threshold 120)
- (setq split-height-threshold 40)
- (purpose-mode)
-
- (require 'purpose-x)
- (global-set-key (kbd "C-x 1")
-		 (define-purpose-prefix-overload my:delete-windows
-		   '(delete-other-windows purpose-delete-non-dedicated-windows)))
- (global-set-key (kbd "C-c b") #'purpose-switch-buffer-with-purpose)
- (global-set-key (kbd "C-c 1") #'purpose-delete-non-dedicated-windows))
+ (require 'my-purpose))
 
 
-;;; Prefix overload
+
+;;; Prefix overload, ace-window
 (add-to-list 'load-path "~/Documents/emacs/prefix-overload")
 (eval-if-require
  'prefix-overload
  (define-prefix-overload my-ace-window
    '(ace-select-window
      ace-swap-window
-     ace-delete-window)))
+     ace-delete-window))
+ (global-set-key (kbd "C-c -") #'my-ace-window))
 
 (put 'narrow-to-region 'disabled nil)
-
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages (quote (windata use-package undo-tree spinner smex python-pep8 projectile powerline popup-switcher paredit magit imenu-list iedit ido-vertical-mode hydra golden-ratio flycheck-package flx-ido f elpy deferred company-quickhelp ace-window ace-jump-mode))))
