@@ -44,6 +44,19 @@ With prefix argument, open perspective in new frame."
 (define-key my-keymap (kbd "p c") #'my-clojure-persp)
 
 
+;; don't let cider use "C-c ," since it clashes with purpose
+;; instead of:
+;; - "C-c ," for cider-test-run-tests
+;; - "C-c C-," for cider-test-rerun-tests
+;; we get:
+;; - "C-c C-," for cider-test-run-tests
+;; - "C-u C-c C-," for cider-test-rerun-tests
+(with-eval-after-load 'cider-mode
+  (define-key cider-mode-map (kbd "C-c ,") nil)
+  (define-key cider-mode-map (kbd "C-c C-,")
+    (define-purpose-prefix-overload cider-test-run-overload
+      '(cider-test-run-tests cider-test-rerun-tests))))
+
 ;; make helm behave nicely when there are several windows in the frame
 
 (defun my-helm-display-function (buffer &optional alist)
