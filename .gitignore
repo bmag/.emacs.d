@@ -5,11 +5,14 @@
 *elc
 *pyc
 
-# ignore elpa readme files
-elpa/*-readme.txt
+# ignore elpa
+elpa/*
 
-# ignore elpa archives
-elpa/archives/*
+# # ignore elpa readme files
+# elpa/*-readme.txt
+
+# # ignore elpa archives
+# elpa/archives/*
 
 # ignore various auto-generated files
 ac-comphist.dat

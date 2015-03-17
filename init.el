@@ -19,6 +19,7 @@
 ;; company-quickhelp
 ;; elpy
 ;; flycheck
+;; flycheck-package
 ;; helm
 ;; hydra
 ;; idomenu
