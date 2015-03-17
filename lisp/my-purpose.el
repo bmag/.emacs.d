@@ -1,5 +1,5 @@
 ;; general purpose configuration
-
+(require 'purpose)
 (setq purpose-default-layout-file (concat user-emacs-directory "/purpose-layouts/"))
 (add-to-list 'purpose-user-mode-purposes '(Custom-mode . custom))
 (add-to-list 'purpose-user-mode-purposes '(clojure-mode . clojure))
